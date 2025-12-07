@@ -1,2 +1,321 @@
-# project
-project per njohje me profesion
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="UTF-8">
+    <title>Aplikacion Shpenzimesh</title>
+    <style>
+        /* Stil bazë */
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f4f4f4;
+        }
+
+        header {
+            background: #1e88e5;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            background: #1565c0;
+            padding: 10px;
+        }
+
+        nav button {
+            background: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        nav button.active {
+            background: #ffca28;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        section {
+            display: none;
+        }
+
+        section.active-section {
+            display: block;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        /* Forma */
+        form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        form .full-width {
+            grid-column: 1 / 3;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        form button {
+            background: #1e88e5;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        form button:hover {
+            background: #1565c0;
+        }
+
+        /* Tabela */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: #eeeeee;
+        }
+
+        .total-box {
+            margin-top: 15px;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #777;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Aplikacion i Thjeshtë Shpenzimesh</h1>
+    <p>Menaxho shpenzimet e tua të përditshme</p>
+</header>
+
+<nav>
+    <button id="btn-add" class="active">Shto Transaksion</button>
+    <button id="btn-all">Të Gjithë Transaksionet</button>
+</nav>
+
+<main>
+    <!-- Seksioni 1: Shto Transaksion -->
+    <section id="section-add" class="active-section">
+        <h2>Shto Transaksion të Ri</h2>
+        <form id="transaction-form">
+            <div>
+                <label>Përshkrimi</label>
+                <input type="text" id="description" required placeholder="p.sh. Kafe, Karburant">
+            </div>
+            <div>
+                <label>Shuma (€)</label>
+                <input type="number" id="amount" required step="0.01" min="0">
+            </div>
+            <div>
+                <label>Kategoria</label>
+                <select id="category">
+                    <option value="Ushqim">Ushqim</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Argëtim">Argëtim</option>
+                    <option value="Tjetër">Tjetër</option>
+                </select>
+            </div>
+            <div>
+                <label>Data</label>
+                <input type="date" id="date">
+            </div>
+            <div class="full-width">
+                <button type="submit">Ruaj Transaksionin</button>
+            </div>
+        </form>
+    </section>
+
+    <!-- Seksioni 2: Të Gjithë Transaksionet -->
+    <section id="section-all">
+        <h2>Të Gjithë Transaksionet</h2>
+        <div id="empty-message" class="no-data">
+            Nuk ka ende transaksione. Shto një nga seksioni Shto Transaksion.
+        </div>
+        <table id="transactions-table" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Përshkrimi</th>
+                    <th>Kategoria</th>
+                    <th>Data</th>
+                    <th>Shuma (€)</th>
+                </tr>
+            </thead>
+            <tbody id="transactions-body">
+                <!-- Mbushen me JavaScript -->
+            </tbody>
+        </table>
+        <div class="total-box" id="total-box" style="display:none;">
+            Totali i shpenzimeve: <span id="total-amount">0</span> €
+        </div>
+    </section>
+</main>
+
+<script>
+    // Ruajmë transaksionet në memorie gjatë sesionit
+    const transactions = [];
+
+    const sectionAdd = document.getElementById("section-add");
+    const sectionAll = document.getElementById("section-all");
+    const btnAdd = document.getElementById("btn-add");
+    const btnAll = document.getElementById("btn-all");
+
+    const form = document.getElementById("transaction-form");
+    const tbody = document.getElementById("transactions-body");
+    const table = document.getElementById("transactions-table");
+    const emptyMessage = document.getElementById("empty-message");
+    const totalBox = document.getElementById("total-box");
+    const totalAmountSpan = document.getElementById("total-amount");
+
+    // Ndërrimi i seksioneve
+    function showAddSection() {
+        sectionAdd.classList.add("active-section");
+        sectionAll.classList.remove("active-section");
+        btnAdd.classList.add("active");
+        btnAll.classList.remove("active");
+    }
+
+    function showAllSection() {
+        sectionAll.classList.add("active-section");
+        sectionAdd.classList.remove("active-section");
+        btnAll.classList.add("active");
+        btnAdd.classList.remove("active");
+        renderTransactions();
+    }
+
+    btnAdd.addEventListener("click", showAddSection);
+    btnAll.addEventListener("click", showAllSection);
+
+    // Dëgjojmë submit të formës
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const description = document.getElementById("description").value.trim();
+        const amount = parseFloat(document.getElementById("amount").value);
+        const category = document.getElementById("category").value;
+        const dateInput = document.getElementById("date").value;
+        const date = dateInput || new Date().toISOString().split("T")[0];
+
+        if (!description || isNaN(amount)) {
+            alert("Ju lutem plotësoni përshkrimin dhe shumën siç duhet.");
+            return;
+        }
+
+        const transaction = {
+            description,
+            amount,
+            category,
+            date
+        };
+
+        transactions.push(transaction);
+
+        // Pastrojmë fushat
+        form.reset();
+
+        // Opsionale: kaloj direkt te lista
+        showAllSection();
+    });
+
+    // Shfaqim transaksionet në tabelë
+    function renderTransactions() {
+        tbody.innerHTML = "";
+
+        if (transactions.length === 0) {
+            table.style.display = "none";
+            totalBox.style.display = "none";
+            emptyMessage.style.display = "block";
+            return;
+        }
+
+        emptyMessage.style.display = "none";
+        table.style.display = "table";
+        totalBox.style.display = "block";
+
+        let total = 0;
+
+        transactions.forEach(tr => {
+            const row = document.createElement("tr");
+
+            const tdDesc = document.createElement("td");
+            tdDesc.textContent = tr.description;
+
+            const tdCat = document.createElement("td");
+            tdCat.textContent = tr.category;
+
+            const tdDate = document.createElement("td");
+            tdDate.textContent = tr.date;
+
+            const tdAmount = document.createElement("td");
+            tdAmount.textContent = tr.amount.toFixed(2);
+
+            row.appendChild(tdDesc);
+            row.appendChild(tdCat);
+            row.appendChild(tdDate);
+            row.appendChild(tdAmount);
+
+            tbody.appendChild(row);
+
+            total += tr.amount;
+        });
+
+        totalAmountSpan.textContent = total.toFixed(2);
+    }
+</script>
+
+</body>
+</html>
+
+
