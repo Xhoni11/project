@@ -1,0 +1,122 @@
+<script>
+    // Lexojmë të dhënat nga localStorage kur faqja hapet
+    let transactions = loadTransactions();
+
+    const sectionAdd = document.getElementById("section-add");
+    const sectionAll = document.getElementById("section-all");
+    const btnAdd = document.getElementById("btn-add");
+    const btnAll = document.getElementById("btn-all");
+
+    const form = document.getElementById("transaction-form");
+    const tbody = document.getElementById("transactions-body");
+    const table = document.getElementById("transactions-table");
+    const emptyMessage = document.getElementById("empty-message");
+    const totalBox = document.getElementById("total-box");
+    const totalAmountSpan = document.getElementById("total-amount");
+
+    // FUNKSION – Ruaje në localStorage
+    function saveTransactions() {
+        localStorage.setItem("transactions", JSON.stringify(transactions));
+    }
+
+    // FUNKSION – Lexo nga localStorage
+    function loadTransactions() {
+        const data = localStorage.getItem("transactions");
+        return data ? JSON.parse(data) : [];
+    }
+
+    // Ndërrimi i seksioneve
+    function showAddSection() {
+        sectionAdd.classList.add("active-section");
+        sectionAll.classList.remove("active-section");
+        btnAdd.classList.add("active");
+        btnAll.classList.remove("active");
+    }
+
+    function showAllSection() {
+        sectionAll.classList.add("active-section");
+        sectionAdd.classList.remove("active-section");
+        btnAll.classList.add("active");
+        btnAdd.classList.remove("active");
+        renderTransactions();
+    }
+
+    btnAdd.addEventListener("click", showAddSection);
+    btnAll.addEventListener("click", showAllSection);
+
+    // Dëgjojmë submit të formës
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const description = document.getElementById("description").value.trim();
+        const amount = parseFloat(document.getElementById("amount").value);
+        const category = document.getElementById("category").value;
+        const dateInput = document.getElementById("date").value;
+        const date = dateInput || new Date().toISOString().split("T")[0];
+
+        if (!description || isNaN(amount)) {
+            alert("Ju lutem plotësoni përshkrimin dhe shumën.");
+            return;
+        }
+
+        const transaction = {
+            description,
+            amount,
+            category,
+            date
+        };
+
+        // Ruajmë transaksionin në array
+        transactions.push(transaction);
+
+        // Ruaj në localStorage
+        saveTransactions();
+
+        // Pastro formën
+        form.reset();
+
+        // Shfaq listën
+        showAllSection();
+    });
+
+    // Shfaqim transaksionet në tabelë
+    function renderTransactions() {
+        tbody.innerHTML = "";
+
+        // Rifreskojmë nga localStorage
+        transactions = loadTransactions();
+
+        if (transactions.length === 0) {
+            table.style.display = "none";
+            totalBox.style.display = "none";
+            emptyMessage.style.display = "block";
+            return;
+        }
+
+        emptyMessage.style.display = "none";
+        table.style.display = "table";
+        totalBox.style.display = "block";
+
+        let total = 0;
+
+        transactions.forEach(tr => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${tr.description}</td>
+                <td>${tr.category}</td>
+                <td>${tr.date}</td>
+                <td>${tr.amount.toFixed(2)}</td>
+            `;
+
+            tbody.appendChild(row);
+
+            total += tr.amount;
+        });
+
+        totalAmountSpan.textContent = total.toFixed(2);
+    }
+
+    // Shfaq transaksionet automatikisht në seksionin "Të Gjithë Transaksionet"
+    renderTransactions();
+</script>
